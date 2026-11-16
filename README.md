@@ -15,6 +15,10 @@ One file for Windows and macOS. There is no installer: your Java runs it.
 
 The zip only holds the same `.jar`. Take it if your browser questions the `.jar` download.
 
+Safari may first ask whether to allow downloads from “github.com”: click **Allow**. Safari unpacks
+the zip by itself, so either way you find `AppOrchestrator-1.0.jar` in Downloads. Edge may warn that
+the `.jar` could harm your device: click **Keep**.
+
 ## What you need
 
 * A 64-bit Windows 10 or 11 PC, or a Mac with Apple silicon or Intel.
@@ -71,9 +75,10 @@ macOS says this about every downloaded program that is not registered with Apple
 1. Click **Done**. Do not click **Move to Trash**, even though it is the highlighted button.
 2. Open **System Settings → Privacy & Security** and scroll down to **Security**. Next to the line
    about `AppOrchestrator-1.0.jar`, click **Open Anyway**.
-3. macOS asks again. Click **Open Anyway**.
+3. macOS asks again. Click **Open Anyway** and confirm with your password or Touch ID.
 
-After that the file opens with a double click and no questions.
+After that this file opens with a double click and no questions. macOS asks once for every file you
+download: a new download, even of the same version, goes through these steps again.
 
 **Windows.** Windows showed no warning for the downloaded file. If Windows asks which app should
 open it, see [Start AppOrchestrator](#start-apporchestrator).
