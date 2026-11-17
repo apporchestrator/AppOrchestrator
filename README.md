@@ -10,13 +10,13 @@ One file for Windows and macOS. There is no installer: your Java runs it.
 
 | File | Size | SHA-256 |
 |---|---|---|
-| [AppOrchestrator-1.0.zip](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.0/AppOrchestrator-1.0.zip) | 61.2 MB | `880f21ea7b7a66b70112d3f62600967e96f5acbe3e4639848259b03675c7186d` |
-| [AppOrchestrator-1.0.jar](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.0/AppOrchestrator-1.0.jar) | 63.4 MB | `e0ade769651bb404489931d43e6400f30457a580457e86fc6587d72ebb92008c` |
+| [AppOrchestrator-1.1.zip](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.1/AppOrchestrator-1.1.zip) | 61.3 MB | `b90e4e7cd1d23446f225b40d30ce15575d8fe29ae17872f79da795d17d4f7620` |
+| [AppOrchestrator-1.1.jar](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.1/AppOrchestrator-1.1.jar) | 63.5 MB | `b414fc936e0d4a0f0efe2a13874f6f2d17ace3fbd5129230af73aaa4075b2431` |
 
 The zip only holds the same `.jar`. Take it if your browser questions the `.jar` download.
 
 Safari may first ask whether to allow downloads from “github.com”: click **Allow**. Safari unpacks
-the zip by itself, so either way you find `AppOrchestrator-1.0.jar` in Downloads. Edge may warn that
+the zip by itself, so either way you find `AppOrchestrator-1.1.jar` in Downloads. Edge may warn that
 the `.jar` could harm your device: click **Keep**.
 
 ## What you need
@@ -43,38 +43,38 @@ If your Java is too old, AppOrchestrator tells you so when it starts and offers 
 
 ## Start AppOrchestrator
 
-**Windows.** If you downloaded the zip, unpack it first. Double-click `AppOrchestrator-1.0.jar`.
+**Windows.** If you downloaded the zip, unpack it first. Double-click `AppOrchestrator-1.1.jar`.
 If Windows asks which app should open the `.jar` file, choose **OpenJDK Platform binary**, marked
 **New**. This is the Java you just installed. Then click **Always**. **Java(TM) Platform SE binary**
 is an older Oracle Java: with it, AppOrchestrator only says that it needs a newer Java. You can also
 start AppOrchestrator from PowerShell or the Command Prompt:
 
 ```
-java -jar "%USERPROFILE%\Downloads\AppOrchestrator-1.0.jar"
+java -jar "%USERPROFILE%\Downloads\AppOrchestrator-1.1.jar"
 ```
 
-In PowerShell, write the path as `"$HOME\Downloads\AppOrchestrator-1.0.jar"`.
+In PowerShell, write the path as `"$HOME\Downloads\AppOrchestrator-1.1.jar"`.
 
-**macOS.** Double-click `AppOrchestrator-1.0.jar`. The first time, macOS stops it; see
+**macOS.** Double-click `AppOrchestrator-1.1.jar`. The first time, macOS stops it; see
 [Warnings on first start](#warnings-on-first-start). You can also start it from Terminal, where
 macOS does not ask:
 
 ```
-java -jar ~/Downloads/AppOrchestrator-1.0.jar
+java -jar ~/Downloads/AppOrchestrator-1.1.jar
 ```
 
 ## Warnings on first start
 
 **macOS.** The first double click on a downloaded file shows this message:
 
-> “AppOrchestrator-1.0.jar” Not Opened. Apple could not verify “AppOrchestrator-1.0.jar” is free of
+> “AppOrchestrator-1.1.jar” Not Opened. Apple could not verify “AppOrchestrator-1.1.jar” is free of
 > malware that may harm your Mac or compromise your privacy.
 
 macOS says this about every downloaded program that is not registered with Apple. Do this:
 
 1. Click **Done**. Do not click **Move to Trash**, even though it is the highlighted button.
 2. Open **System Settings → Privacy & Security** and scroll down to **Security**. Next to the line
-   about `AppOrchestrator-1.0.jar`, click **Open Anyway**.
+   about `AppOrchestrator-1.1.jar`, click **Open Anyway**.
 3. macOS asks again. Click **Open Anyway** and confirm with your password or Touch ID.
 
 After that this file opens with a double click and no questions. macOS asks once for every file you
@@ -87,8 +87,8 @@ open it, see [Start AppOrchestrator](#start-apporchestrator).
 
 Compare the result with the SHA-256 in the table above.
 
-* macOS, in Terminal: `shasum -a 256 ~/Downloads/AppOrchestrator-1.0.jar`
-* Windows, in PowerShell: `Get-FileHash $HOME\Downloads\AppOrchestrator-1.0.jar`
+* macOS, in Terminal: `shasum -a 256 ~/Downloads/AppOrchestrator-1.1.jar`
+* Windows, in PowerShell: `Get-FileHash $HOME\Downloads\AppOrchestrator-1.1.jar`
 
 ## Connect the phone
 
@@ -128,22 +128,12 @@ options → Wireless debugging**.
 Wireless debugging turns itself off when the phone restarts or leaves the Wi-Fi network. Turn it on
 again, then use **Switch to Wi-Fi** or **Connect over Wi-Fi…**.
 
-## Install an app from APK files
+## Using AppOrchestrator
 
-Press **Install APK…** above the package list, or drag the files onto the window. Choose one `.apk`,
-or all the APK files of one app (a base APK and its split APKs). AppOrchestrator reads them first and
-says what will happen:
-
-* **A new app.** **Undo** in the journal uninstalls it again, with its data. AppOrchestrator turns
-  the phone's screen on: if the phone asks whether to install the app, tap **Install**. Xiaomi phones
-  ask only for 10 seconds and then deny it, and only if **Developer options → Install via USB** is
-  on; turning it on may need you to sign in with a Mi account.
-* **An update.** It cannot be undone: Android does not install an older version over a newer one.
-  The app keeps the store it came from, which goes on updating it.
-* **An older version** than the phone has is not installed.
-
-Archives such as `.apks` or `.xapk` are not supported yet: unpack them and choose the `.apk` files
-inside.
+The [user guide](USER_GUIDE.md) shows the window and explains every action: what it does, when it
+helps and how to undo it. It also covers the journal, batch actions, profiles (including the
+profile offered when a phone connects), installing APK files, and what to do when something does
+not work.
 
 ## Terms of use
 
