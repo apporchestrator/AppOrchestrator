@@ -80,9 +80,11 @@ The top shows the type, uid, version, install path, installer and state. Below a
 * **Buttons** for one-off actions. Which ones appear depends on the app: an updated system app has
   **Uninstall updates**, a removed one has **Restore for user**.
 * **Add to profile…**: save one of this app's states into a [profile](#9-profiles).
+* **Save APK…**: save the app to a file on the computer, to [install it again](#save-apk) later.
 * **Permissions**: a switch per runtime permission. Permissions fixed by the system are greyed out.
 * **Background**: *Run in background*, *Background services (legacy apps)*, *Battery optimization*,
-  *Background mobile data*.
+  *Background mobile data*, and on Xiaomi phones *MIUI battery saver*.
+* **Network**: *Internet access*.
 * **Notifications**: *Show notifications*.
 * **Links**: *Open supported links*, only for apps that open web addresses.
 * **Language**: the app's own language (Android 13+).
@@ -172,15 +174,22 @@ Removes the app for you (user 0) and keeps its files on the phone where the syst
 
 * **System apps** keep their copy on the phone, so they can always be restored from the *Removed for
   user* tab with **Restore for user**.
-* **Third-party apps** can be restored only while another user or work profile on the phone still
-  has the app. Otherwise the APK is deleted and the app can only be installed again. The
-  confirmation tells you which case applies.
+* **Third-party apps** that another user or work profile on the phone still has can be restored the
+  same way, while that user keeps the app.
+* **Third-party apps that only you have** lose their APK too. AppOrchestrator copies the APK files to
+  the computer first, into the phone's folder ([where](README.md#where-apporchestrator-keeps-its-files)):
+  if the copy fails, nothing is uninstalled. **Undo** in the journal installs the app again for you
+  from that copy, with the store it came from. Android keeps the app's data when it is removed for
+  one user, so it comes back with its data.
+
+The confirmation tells you which case applies.
 
 <details><summary>How it works</summary>
 
-`pm uninstall -k --user 0 <package>` / `cmd package install-existing --user 0 <package>`. App clones
-(for example Xiaomi's Second space for apps) do not count as another user: they lose their copy
-together with you.
+`pm uninstall -k --user 0 <package>` / `cmd package install-existing --user 0 <package>`. For an app
+only you have, the undo is `pm install -r --user 0 -i <installer> <files>` with the saved copy. App
+clones (for example Xiaomi's Second space for apps) do not count as another user: they lose their
+copy together with you.
 </details>
 
 ### Disable or uninstall for user?
@@ -190,7 +199,7 @@ together with you.
 | The app | Stays installed but cannot run: no icon, no services, no notifications. | Is not installed for you any more. |
 | Who sees it | The phone's Settings list it as disabled; other apps see it is there. | The phone's Settings and other apps do not see it. |
 | Tab | *Disabled* | *Removed for user* |
-| Back | **Enable**, any time. | **Restore for user**: always for system apps, for third-party apps only while another user keeps them. |
+| Back | **Enable**, any time. | **Restore for user** for system apps and apps another user keeps; **Undo** in the journal, from the saved APK, for apps only you had. |
 
 Disable is the safe choice for preinstalled apps you do not use. Uninstall for user removes a system
 app more thoroughly, and is still reversible.
@@ -269,17 +278,34 @@ exempts the app: it keeps network and alarms while the phone sleeps. This is the
 option in Settings.
 
 Useful for messengers whose notifications come late, smart home, health trackers, alarm apps. It
-costs some battery. Some apps are exempted by the system itself: their switch is off and greyed out.
+costs some battery.
 
-On Xiaomi phones the maker's own battery saver and **Autostart** setting work on top of Doze, so
-this switch alone may not be enough. Autostart cannot be changed over ADB; set it in the Security
-app.
+Some apps are exempted by the system itself: the phone's maker keeps them out of Doze, and Settings
+does not let you change that. Their switch is off and says *exempted by the system*. Turning it on
+takes the exemption away, after a confirmation; turning it off again gives it back. Apps that much
+depends on keep theirs, and the switch is greyed out with the reason: Google Play services (it
+delivers push messages for most apps), calls and SMS, emergency alerts, the clock, and apps that run
+as a system uid.
+
+Android saves a change of this setting a few seconds later, and loses it if the phone falls asleep
+and restarts before that. So after the change AppOrchestrator turns the phone's screen on, which
+keeps it awake. Don't restart the phone right away; after that the change stays, restarts included.
+
+On Xiaomi phones the maker's own battery saver ([MIUI battery saver](#miui-battery-saver-xiaomi))
+and **Autostart** setting work on top of Doze, so this switch alone may not be enough. Autostart
+cannot be changed over ADB; set it in the Security app. MIUI gives the exemption again at every
+restart to apps set to *No restrictions* there, and to a few of its own apps (Weather, Mi Account,
+Music and others): for them, battery optimization stays on only until the phone restarts, and the
+card says so.
 
 <details><summary>How it works</summary>
 
-`cmd deviceidle whitelist +<package>` / `-<package>`. `cmd deviceidle whitelist` lists
-`user,<package>,<uid>` for an exemption you can remove, `system,<package>,<uid>` for one from the
-system that you cannot.
+`cmd deviceidle whitelist +<package>` / `-<package>` changes your exemption,
+`cmd deviceidle sys-whitelist -<package>` / `+<package>` the system's. `cmd deviceidle whitelist`
+lists `user,<package>,<uid>` for yours and `system,<package>,<uid>` for the system's; `dumpsys
+deviceidle` lists the apps whose system exemption was taken away under *Removed from whitelist system
+apps*. Android exempts a whole uid: while one of its packages is exempt, all of them are. It writes
+the lists to storage about 5 seconds after a change, on a timer that stops while the phone sleeps.
 </details>
 
 ### Background mobile data
@@ -296,6 +322,93 @@ AppOrchestrator asks before it does that. Apps that run as the system itself are
 
 `cmd netpolicy add restrict-background-blacklist <uid>` / `remove …`. The restriction is on the uid,
 not the package name, so the uid is read right before the change.
+</details>
+
+### MIUI battery saver (Xiaomi)
+
+Xiaomi phones (MIUI, HyperOS) have their own battery setting for each app, apart from Android's:
+**No restrictions**, **Battery saver** (the default), and two ways to restrict the app in the
+background. The card shows it on Xiaomi phones. AppOrchestrator cannot change it:
+**Change on the phone…** turns the phone's screen on and opens MIUI's page for the app there. Unlock
+the phone and choose; the card notices the new mode by itself within a few seconds (it watches for
+three minutes).
+
+* Only **No restrictions** keeps HyperOS from freezing the app a few seconds after it leaves the
+  screen (while the phone is not charging). *Battery optimization* off does not: the app is frozen
+  anyway. Choose it for apps that must keep working in the background, such as messengers, alarms
+  and trackers.
+* **No restrictions** also exempts the app from battery optimization, again after every restart.
+* MIUI's choice and Android's switches are separate: MIUI's *Restrict background* does not turn *Run
+  in background* off, and the other way round. Protected apps have no button.
+
+<details><summary>How it works</summary>
+
+The mode is `bgControl` in PowerKeeper's table (`noRestrict`, `miuiAuto`, `restrictBg`, `noBg`),
+read from `dumpsys activity service com.miui.powerkeeper/.PowerKeeperBackgroundService`. The shell
+cannot write it: PowerKeeper's provider needs a system permission. The page is
+`com.miui.powerkeeper/.ui.HiddenAppsConfigActivity` on MIUI 14, and the standard
+`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` action on HyperOS, which opens Security's *Battery details*.
+HyperOS freezes background apps when `persist.sys.powmillet.enable` is `true`; apps set to
+`noRestrict` are skipped.
+</details>
+
+### Which one to use
+
+These switches limit different things, and their limits add up:
+
+| Switch | What it does | When |
+|---|---|---|
+| *Run in background* off | Almost no background work: jobs, alarms and background services wait until you open the app | Whenever the app is not on screen |
+| *Background services (legacy apps)* off | Stops background services of apps built for old Android versions | Whenever the app is not on screen |
+| *Battery optimization* off | Lifts limits instead: the app keeps network and alarms while the phone sleeps, and Android's own limits for rarely used apps do not apply to it | Mostly while the phone sleeps |
+| *Background mobile data* off | No mobile data or metered Wi-Fi | While the app is in the background |
+| *Internet access* off | No network at all, Wi-Fi or mobile | Always, even on screen, until the phone restarts |
+| *MIUI battery saver*: No restrictions (Xiaomi) | Keeps HyperOS from freezing the app, and exempts it from battery optimization | Whenever the app is not on screen |
+
+* Settings shows *Run in background* and *Battery optimization* as one choice of three in the app's
+  battery settings: *Unrestricted* (battery optimization off), *Optimized* (both on, the default) and
+  *Restricted* (run in background off). AppOrchestrator shows them as two switches. If both are off,
+  battery optimization wins: Android does not hold back an exempt app. To restrict an app, keep its
+  battery optimization on.
+* To save battery, turn *Run in background* off for apps that only need to work while open.
+* When an app's messages or reminders come late, turn *Battery optimization* off and check that *Run
+  in background* is on.
+* *Background mobile data* is about data use, not the battery.
+
+<details><summary>How it works</summary>
+
+An app on any Doze exemption list (`user`, `system`, even `system-excidle`) is exempt from the
+`RUN_ANY_IN_BACKGROUND` limits on jobs and alarms (`AppStateTrackerImpl.areJobsRestricted` /
+`areAlarmsRestricted` in AOSP), and Android puts it in the `exempted` App Standby bucket
+(`am get-standby-bucket <package>` prints `5`).
+</details>
+
+### Internet access
+
+Off: the app gets no internet at all, over Wi-Fi or mobile data, even while you use it. Useful for an
+app that should only work offline, or that you want to keep from sending data. Turning it back on
+gives the internet back at once.
+
+The block lasts until the phone restarts: Android clears it then, and the switch is on again. If
+the block was set from AppOrchestrator, the card then says it is gone. Turn it off again, or apply a profile that holds it. If the phone has a profile of its own,
+AppOrchestrator offers it when the phone connects after the restart.
+
+The block applies to the app's user ID (uid), for every user of the phone, app clones and the second
+space included. Apps that share a uid are blocked together, and AppOrchestrator asks before it does
+that. Apps that run as the system itself cannot be blocked.
+
+It needs a recent Google Play system update on the phone: the commands come with Android's network
+module. Where they are missing, the switch is greyed out and says so.
+
+<details><summary>How it works</summary>
+
+`cmd connectivity set-package-networking-enabled false <package>` puts the app's uid into the
+firewall chain `OEM_DENY_3`, which works only while the chain is on, so blocking also runs `cmd
+connectivity set-chain3-enabled true`; `… true <package>` allows it again. `cmd connectivity
+get-package-networking-enabled <package>` and `get-chain3-enabled` read the state, and `dumpsys
+connectivity trafficcontroller` lists the uid with `OEM_DENY_3_MATCH`. The chain is one for the whole
+phone and other apps (ShizuWall) use it too, so AppOrchestrator never turns it off; with no rules in
+it, it blocks nothing.
 </details>
 
 ### Show notifications
@@ -419,9 +532,9 @@ every phone.
   Android uses. Import drops lines with invalid package names, protected packages or actions a
   profile cannot hold, and lists what it dropped.
 
-A profile can hold: suspended, disabled, permissions, background, battery optimization, background
-data, notifications, links and language. It never holds force stop, clearing data, archiving or
-uninstalling.
+A profile can hold: suspended, disabled, permissions, background, battery optimization (a system
+exemption taken away too), background data, internet access, notifications, links and language. It
+never holds force stop, clearing data, archiving or uninstalling.
 
 ### A phone's profile when it connects
 
@@ -445,9 +558,9 @@ at once.
 
 ## 10. Installing APK files
 
-Press **Install APK…** at the top, or drag the files onto the window. Choose one `.apk`, or all the
-APK files of one app (a base APK and its split APKs). AppOrchestrator reads them first and says what
-will happen:
+Press **Install APK…** at the top, or drag the files onto the window. Choose one `.apk`, all the
+APK files of one app (a base APK and its split APKs), or one archive of them (see **Archives**
+below). AppOrchestrator reads them first and says what will happen:
 
 <img src="images/install.png" width="800" alt="Installing an update">
 
@@ -470,13 +583,42 @@ still see that it was installed over USB.
 AppOrchestrator turns the phone's screen on before each install: the phone may ask something, for
 example Google Play Protect whether to send an app it does not know for a check. Answer there.
 
-Archives such as `.apks` or `.xapk` are not supported yet: unpack them and choose the `.apk` files
-inside.
+**Archives.** An app that comes as one `.apks` (bundletool, SAI), `.xapk` (APKPure) or `.apkm`
+(APKMirror) file is installed the same way: choose or drop the archive on its own. AppOrchestrator
+looks inside, takes the split APKs this phone needs (its processor type and the nearest screen
+density, and every language) and leaves out those made for other phones; the dialog lists both. A
+game's expansion files (OBB) in an `.xapk` are copied to `Android/obb/<package>` after the install,
+and uninstalling the app removes them. An `.apkm` from an older APKMirror is encrypted and cannot be
+read: download it again.
 
 <details><summary>How it works</summary>
 
 The files go to `/data/local/tmp`, then `pm install -r [-i <installer>] <files>`; the files are
-removed again in any case.
+removed again in any case. From an archive, only the chosen APK files are unpacked on the computer,
+into a temporary folder that goes when the dialog closes. The phone's processor types and density
+come from `getprop ro.product.cpu.abilist` and `wm density`.
+</details>
+
+### Save APK
+
+**Save APK…** on the package card copies the app from the phone to the computer as one file. The
+Save window offers a name made of the package and version; choose the folder, change the name if you
+like, and press **Save**. An app in one APK becomes an `.apk`, for example
+`com.example.mail-4.2.1.apk`. An app made of a base APK and split APKs becomes one `.apks` with all
+of them, for example `com.example.mail-4.2.1.apks`. **Install APK…** installs either file again. On
+another phone it works when that phone has the same processor type: an `.apks` holds only the split
+APKs this phone uses.
+
+This works for system apps too. Nothing changes on the phone, so nothing goes into the journal. If a
+file with that name is already there, the system asks whether to replace it. Next time the window
+opens in the folder you saved to last. **The app's data is not saved**, only the app.
+
+<details><summary>How it works</summary>
+
+`pm path <package>`, then each file is copied over adb into a temporary folder on the computer.
+AppOrchestrator checks that every file is an APK of that app, then writes the `.apk`, or the `.apks`
+(a zip of the APK files, stored as they are). If the name you typed ends otherwise, the right
+extension is put in its place.
 </details>
 
 ## 11. Troubleshooting
@@ -503,12 +645,14 @@ AppOrchestrator has the rights of `adb shell`, not root. It cannot:
 * change Xiaomi's **Autostart** setting;
 * work on other users, the work profile or app clones: everything is for user 0;
 * work with several phones at once: it lists them all, and you work with the selected one;
-* install `.apks`, `.xapk` or `.apkm` archives.
+* install an encrypted `.apkm` from an older APKMirror;
+* save an app's data: **Save APK** saves the app only.
 
 ## 13. Privacy
 
 AppOrchestrator collects and sends nothing. What it reads from the phone stays on your computer, in
 its folder ([where](README.md#where-apporchestrator-keeps-its-files)): each phone's journal, the
-profiles, the settings and the APK copies saved before **Uninstall for all users**. The only network
+profiles, the settings and the APK copies saved before **Uninstall for all users**. APK files you
+save with **Save APK** go to the folder you choose. The only network
 traffic is adb's own: to the phone over Wi-Fi, and the one-time download of Platform-Tools from
 Google if you choose it.
