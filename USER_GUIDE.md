@@ -49,8 +49,8 @@ journal, so that it can be undone. Each phone has its own journal on the compute
   **Refresh** are at the top right.
 * **Tabs**: **Packages**, **Journal** and **Profiles** of that phone. The number is how many entries
   or profiles there are.
-* **Output**, at the bottom: every command AppOrchestrator sends and what the phone answers. Drag
-  its top edge to make it taller; **Hide** folds it away.
+* **Output**, at the bottom: what AppOrchestrator does, in words: which app it changes, what it
+  copies, what went wrong. Drag its top edge to make it taller; **Hide** folds it away.
 * **The status bar**: whether the adb server runs, and on which port.
 
 Keys: **F5** or **Ctrl+R** (**Cmd+R** on macOS) reads the list again, **Ctrl+F** (**Cmd+F**) goes to
@@ -476,7 +476,8 @@ Every command AppOrchestrator sends is recorded in the phone's journal **before*
 
 <img src="images/journal.png" width="800" alt="The journal">
 
-Each entry shows the command, the state before and the undo command. Marks:
+Each entry shows the action, the app, the state before and what **Undo** does. The commands
+themselves stay in the journal: **Export to file…** saves them with everything else. Marks:
 
 * `OK`: done and confirmed by reading the app again.
 * `FAILED`: the phone refused, or the app did not reach the expected state.
