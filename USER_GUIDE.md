@@ -51,7 +51,11 @@ journal, so that it can be undone. Each phone has its own journal on the compute
   or profiles there are.
 * **Output**, at the bottom: what AppOrchestrator does, in words: which app it changes, what it
   copies, what went wrong. Drag its top edge to make it taller; **Hide** folds it away.
-* **The status bar**: whether the adb server runs, and on which port.
+* **The status bar**: whether the adb server runs, and on which port. On the right, the app's
+  version: click it for **About** (on macOS also **AppOrchestrator → About AppOrchestrator** in the
+  menu bar). About shows the version, the Java and the system it runs on, and the folder with the
+  app's files (**Open folder**), with links to the download page and the terms of use. **Copy
+  details** puts the version, Java and system on the clipboard, for a report.
 
 Keys: **F5** or **Ctrl+R** (**Cmd+R** on macOS) reads the list again, **Ctrl+F** (**Cmd+F**) goes to
 the search, **Escape** closes the card or clears the selection.
@@ -81,7 +85,7 @@ The top shows the type, uid, version, install path, installer and state. Below a
   **Uninstall updates**, a removed one has **Restore for user**.
 * **Add to profile…**: save one of this app's states into a [profile](#9-profiles).
 * **Save APK…**: save the app to a file on the computer, to [install it again](#save-apk) later.
-* **Permissions**: a switch per runtime permission. Permissions fixed by the system are greyed out.
+* **Permissions**: a switch per runtime permission, with Android's own name and description in the phone's language. Permissions fixed by the system are greyed out.
 * **Background**: *Run in background*, *Background services (legacy apps)*, *Battery optimization*,
   *Background mobile data*, and on Xiaomi phones *MIUI battery saver*.
 * **Network**: *Internet access*.
@@ -245,14 +249,19 @@ the version the phone shipped with. The update comes back only from the store. *
 
 ### Permissions
 
-Each switch grants or revokes one runtime permission (camera, location, contacts…). A revoked
-permission is not final: the app can ask again and the system shows its usual dialog. Permissions
-the system fixed cannot be changed. For apps that share a uid (some system apps), the change applies
-to all of them, and the card says so.
+Each switch grants or revokes one runtime permission (camera, location, contacts…). Its name and
+description are Android's own, in the phone's language, as the phone's settings word them; below them
+is the permission's system name, such as `android.permission.CAMERA`. A permission Android has no
+text for shows only its system name. A revoked permission is not final: the app can ask again and
+the system shows its usual dialog. Permissions the system fixed cannot be changed: their switches
+are grey, and the card says "fixed by the system". For apps that share a uid (some system apps), the
+change applies to all of them, and the card says so.
 
 <details><summary>How it works</summary>
 
-`pm grant --user 0 <package> <permission>` / `pm revoke --user 0 <package> <permission>`
+`pm grant --user 0 <package> <permission>` / `pm revoke --user 0 <package> <permission>`. The texts
+come from `pm list permissions -g -d -f`, read once, with the first package list: after a change of
+the phone's language, restart AppOrchestrator to see them in the new one.
 </details>
 
 ### Run in background / Background services (legacy apps)
@@ -261,6 +270,9 @@ to all of them, and the card says so.
   the *Restricted* battery setting in Settings. Good for apps that should only work while open.
 * **Background services (legacy apps)** off: the same limit for apps built for old Android
   versions, which could start background services freely.
+
+Under each switch the card says what its state means, and below that, in small print, Android's
+name for it and its mode (`RUN_ANY_IN_BACKGROUND: allow`), as `appops` prints them.
 
 Messengers and alarm clocks with these off may deliver late or not at all.
 
