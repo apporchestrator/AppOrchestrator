@@ -488,7 +488,8 @@ Every command AppOrchestrator sends is recorded in the phone's journal **before*
 
 <img src="images/journal.png" width="800" alt="The journal">
 
-Each entry shows the action, the app, the state before and what **Undo** does. The commands
+Each entry shows the action, named as the card's switch ("Run in background → off", "Take
+pictures and videos → on"), the app, the state before and what **Undo** does. The commands
 themselves stay in the journal: **Export to file…** saves them with everything else. Marks:
 
 * `OK`: done and confirmed by reading the app again.
@@ -504,8 +505,9 @@ themselves stay in the journal: **Export to file…** saves them with everything
 * changed in some other way since: you are asked **Undo anyway?** with the current, expected and
   restored values.
 
-**Undo whole batch** undoes every entry of a batch or profile. **Active changes** shows only changes
-that are still in effect. **Export to file…** saves the journal as JSON. The journal is kept on the
+**Undo whole batch** undoes every entry of a batch or profile. **All** shows every entry; **In
+effect** only the changes still in effect, each of which can be undone. **Export to file…** saves
+the journal as JSON. The journal is kept on the
 computer, in the phone's folder, so it survives a reset of the phone.
 
 ## 8. Batch actions
