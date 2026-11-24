@@ -10,13 +10,13 @@ One file for Windows and macOS. There is no installer: your Java runs it.
 
 | File | Size | SHA-256 |
 |---|---|---|
-| [AppOrchestrator-1.3.2.zip](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.3.2/AppOrchestrator-1.3.2.zip) | 61.6 MB | `0b7ce9ae81f412a24f1605b8e436807f3a84ac3ebe4fca74d4d00d774adb7e2a` |
-| [AppOrchestrator-1.3.2.jar](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.3.2/AppOrchestrator-1.3.2.jar) | 63.9 MB | `e84a8e71504525f815c23f8bcf010ed739c5d16794f0e01cdb09c64ffb4d802c` |
+| [AppOrchestrator-1.3.3.zip](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.3.3/AppOrchestrator-1.3.3.zip) | 61.7 MB | `9f90e8e59fddfb6f1cf6cf8a4be61eb09eb721b6de174de3ee2d216212bdbf94` |
+| [AppOrchestrator-1.3.3.jar](https://github.com/apporchestrator/AppOrchestrator/releases/download/v1.3.3/AppOrchestrator-1.3.3.jar) | 63.9 MB | `7fad0934c9663a196ee2cd2a8816afa04340e69ae26d294fe384e947b82aab22` |
 
 The zip only holds the same `.jar`. Take it if your browser questions the `.jar` download.
 
 Safari may first ask whether to allow downloads from “github.com”: click **Allow**. Safari unpacks
-the zip by itself, so either way you find `AppOrchestrator-1.3.2.jar` in Downloads. Edge may warn that
+the zip by itself, so either way you find `AppOrchestrator-1.3.3.jar` in Downloads. Edge may warn that
 the `.jar` could harm your device: click **Keep**.
 
 ## What you need
@@ -43,38 +43,38 @@ If your Java is too old, AppOrchestrator tells you so when it starts and offers 
 
 ## Start AppOrchestrator
 
-**Windows.** If you downloaded the zip, unpack it first. Double-click `AppOrchestrator-1.3.2.jar`.
+**Windows.** If you downloaded the zip, unpack it first. Double-click `AppOrchestrator-1.3.3.jar`.
 If Windows asks which app should open the `.jar` file, choose **OpenJDK Platform binary**, marked
 **New**. This is the Java you just installed. Then click **Always**. **Java(TM) Platform SE binary**
 is an older Oracle Java: with it, AppOrchestrator only says that it needs a newer Java. You can also
 start AppOrchestrator from PowerShell or the Command Prompt:
 
 ```
-java -jar "%USERPROFILE%\Downloads\AppOrchestrator-1.3.2.jar"
+java -jar "%USERPROFILE%\Downloads\AppOrchestrator-1.3.3.jar"
 ```
 
-In PowerShell, write the path as `"$HOME\Downloads\AppOrchestrator-1.3.2.jar"`.
+In PowerShell, write the path as `"$HOME\Downloads\AppOrchestrator-1.3.3.jar"`.
 
-**macOS.** Double-click `AppOrchestrator-1.3.2.jar`. The first time, macOS stops it; see
+**macOS.** Double-click `AppOrchestrator-1.3.3.jar`. The first time, macOS stops it; see
 [Warnings on first start](#warnings-on-first-start). You can also start it from Terminal, where
 macOS does not ask:
 
 ```
-java -jar ~/Downloads/AppOrchestrator-1.3.2.jar
+java -jar ~/Downloads/AppOrchestrator-1.3.3.jar
 ```
 
 ## Warnings on first start
 
 **macOS.** The first double click on a downloaded file shows this message:
 
-> “AppOrchestrator-1.3.2.jar” Not Opened. Apple could not verify “AppOrchestrator-1.3.2.jar” is free of
+> “AppOrchestrator-1.3.3.jar” Not Opened. Apple could not verify “AppOrchestrator-1.3.3.jar” is free of
 > malware that may harm your Mac or compromise your privacy.
 
 macOS says this about every downloaded program that is not registered with Apple. Do this:
 
 1. Click **Done**. Do not click **Move to Trash**, even though it is the highlighted button.
 2. Open **System Settings → Privacy & Security** and scroll down to **Security**. Next to the line
-   about `AppOrchestrator-1.3.2.jar`, click **Open Anyway**.
+   about `AppOrchestrator-1.3.3.jar`, click **Open Anyway**.
 3. macOS asks again. Click **Open Anyway** and confirm with your password or Touch ID.
 
 After that this file opens with a double click and no questions. macOS asks once for every file you
@@ -87,8 +87,8 @@ open it, see [Start AppOrchestrator](#start-apporchestrator).
 
 Compare the result with the SHA-256 in the table above.
 
-* macOS, in Terminal: `shasum -a 256 ~/Downloads/AppOrchestrator-1.3.2.jar`
-* Windows, in PowerShell: `Get-FileHash $HOME\Downloads\AppOrchestrator-1.3.2.jar`
+* macOS, in Terminal: `shasum -a 256 ~/Downloads/AppOrchestrator-1.3.3.jar`
+* Windows, in PowerShell: `Get-FileHash $HOME\Downloads\AppOrchestrator-1.3.3.jar`
 
 ## Connect the phone
 

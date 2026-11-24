@@ -93,6 +93,14 @@ The top shows the type, uid, version, install path, installer and state. Below a
 * **Links**: *Open supported links*, only for apps that open web addresses.
 * **Language**: the app's own language (Android 13+).
 
+Some apps share one uid (*shared uid*; mostly system apps, such as Google Play services and Google
+Services Framework), and Android keeps some settings for the whole uid. On such an app *Background
+mobile data*, *Internet access* and *Battery optimization* say *whole shared uid …* right after the
+state, and *Permissions* says so above its list: a change there applies to every app of that uid.
+Such an app's card has a **Shared uid** section under the buttons: the uid's name and number, and
+**Show all … apps**, which lists the other apps of that uid; click one to open its card. An app alone
+in its shared uid gets one line, *no other app on this phone*, and no notes about the uid.
+
 Each action reads the app again before it runs, so a card that is a few minutes old is never
 dangerous. When a change is done, the card says how to undo it.
 
@@ -298,6 +306,12 @@ takes the exemption away, after a confirmation; turning it off again gives it ba
 depends on keep theirs, and the switch is greyed out with the reason: Google Play services (it
 delivers push messages for most apps), calls and SMS, emergency alerts, the clock, and apps that run
 as a system uid.
+
+Android exempts a whole uid: an app that shares its uid with others is exempt as soon as one of them
+is. Its switch then says *Not optimized · through <package>, whole shared uid …* and is greyed out, as
+changing this app alone would change nothing: turn battery optimization on for that package instead.
+Turning it off for an app of a shared uid turns it off for the whole uid, and turning it back on does
+the same unless another app of the uid stays exempt; the confirmation says which.
 
 Android saves a change of this setting a few seconds later, and loses it if the phone falls asleep
 and restarts before that. So after the change AppOrchestrator turns the phone's screen on, which
