@@ -86,6 +86,9 @@ The top shows the type, uid, version, install path, installer and state. Below a
 * **Add to profile…**: save one of this app's states into a [profile](#9-profiles).
 * **Save APK…**: save the app to a file on the computer, to [install it again](#save-apk) later.
 * **Permissions**: a switch per runtime permission, with Android's own name and description in the phone's language. Permissions fixed by the system are greyed out.
+* **Special access**: what Android lists under *Special app access* (display over other apps, usage
+  access, all files access, alarms and reminders…), only what the app asks for, each with its switch.
+  See [Special access](#special-access).
 * **Background**: *Run in background*, *Background services (legacy apps)*, *Battery optimization*,
   *Background mobile data*, and on Xiaomi phones *MIUI battery saver*.
 * **Network**: *Internet access*.
@@ -97,12 +100,23 @@ Some apps share one uid (*shared uid*; mostly system apps, such as Google Play s
 Services Framework), and Android keeps some settings for the whole uid. On such an app *Background
 mobile data*, *Internet access* and *Battery optimization* say *whole shared uid …* right after the
 state, and *Permissions* says so above its list: a change there applies to every app of that uid.
+A *Special access* row says *set for its whole uid* when the uid's setting overrules the app's own.
 Such an app's card has a **Shared uid** section under the buttons: the uid's name and number, and
 **Show all … apps**, which lists the other apps of that uid; click one to open its card. An app alone
 in its shared uid gets one line, *no other app on this phone*, and no notes about the uid.
 
 Each action reads the app again before it runs, so a card that is a few minutes old is never
-dangerous. When a change is done, the card says how to undo it.
+dangerous. A switch moves as soon as you click it, and the change itself takes a fraction of a second:
+only that setting is read, before and after. If the change does not go through, the switch goes back.
+
+A change that went through is said at the bottom of the card, over it, for about ten seconds: in an
+oval with **Undo** on its right, the same as undoing it from the journal, or, when it cannot be undone
+from there, in a plain box. Nothing on the card moves, so the next click lands where you aim. The card's
+other messages (an app added to a profile, MIUI's battery page opened on the phone) show there too, in
+the plain box, and an APK file saved in an oval with **Show in folder**. So do the messages of the
+journal, the profiles and the app list (an undo done, a profile applied or exported, apps saved to a
+profile). What did not go through (refused, failed, nothing to do) is said at the top instead, and
+stays there until the next action.
 
 ## 5. What each action does
 
@@ -270,6 +284,59 @@ change applies to all of them, and the card says so.
 `pm grant --user 0 <package> <permission>` / `pm revoke --user 0 <package> <permission>`. The texts
 come from `pm list permissions -g -d -f`, read once, with the first package list: after a change of
 the phone's language, restart AppOrchestrator to see them in the new one.
+</details>
+
+### Special access
+
+The same switches as under *Settings → Apps → Special app access* on the phone (on Xiaomi phones
+*Privacy protection → Special permissions*), for one app. The card shows only what the app asks for:
+
+| Row | The app may… |
+|---|---|
+| Alarms & reminders (Android 12+) | set alarms and reminders that go off at an exact time, even while the phone sleeps |
+| All files access (Android 11+) | read, change and delete every file in the phone's shared storage |
+| Display over other apps | draw its windows on top of other apps |
+| Full screen notifications (Android 14+) | show notifications that fill the screen and turn it on, as calls and alarms do |
+| Install unknown apps | ask to install other apps |
+| Modify system settings | change system settings such as brightness, ringtone and screen timeout |
+| Picture-in-picture | keep a video or a call in a small window on top of other apps when you leave it |
+| Turn screen on (Android 13 only) | turn the screen on by itself |
+| Usage access | see which apps you use, how often and for how long |
+| Wi-Fi control | turn Wi-Fi on and off, scan for networks and connect to them |
+
+*Picture-in-picture* appears for apps that have such a window. *Turn screen on* is there on Android
+13 only: older versions do not check it at all, and Android 14 and newer let every app turn the
+screen on whatever it says, so its switch would change nothing.
+
+Each row says *Allowed* or *Not allowed* and what that means, then Android's name for it and the
+modes the phone keeps (`SYSTEM_ALERT_WINDOW: ignore, uid: allow`). *The system grants it to this
+app* means the app has it without anybody switching it on. A switch here changes the same setting as
+Android's own page, so the phone's Settings show the change too. Before you allow *Install unknown
+apps* or *Usage access*, the card warns you as Android does. Xiaomi phones switch *Display over other
+apps* and *Modify system settings* off for every newly installed app.
+
+Android keeps some of these settings for the app and some for its whole uid, and a setting of the
+uid wins. When an app's own setting is overruled that way, the row says *set for its whole uid*;
+the phone's own page then shows only the app's setting, which says nothing about what the app may
+do. The switch here clears the uid's setting, so it really changes what the app may do.
+
+*Unknown* means the phone answered with a mode AppOrchestrator does not know (Xiaomi has one of its
+own); the switch then turns it on. *Always allowed* (full screen notifications of apps built for
+Android 9 and older) has no switch: Android does not ask such apps.
+
+Undo puts back what was there before, on each level that the change touched. A profile can hold
+"off" for these rows.
+
+<details><summary>How it works</summary>
+
+The state comes from `dumpsys appops --package <package>` (the setting of the app and of its uid)
+and `dumpsys package <package>` (what the app asks for and what it was granted). On:
+`appops set --user 0 <package> <OP> allow`, off: `… ignore`, with `--uid` for *Alarms & reminders*,
+*All files access* and *Full screen notifications*, as Android's settings do. Before changing the
+app's own setting, a setting of its uid is cleared: `appops set --user 0 --uid <package> <OP>` with
+the operation's default mode. For *Full screen notifications* the permission also gets the
+`user-set` flag, as Android's page sets it (`pm set-permission-flags`). Whether an app has a
+picture-in-picture window comes from the helper the app runs on the phone.
 </details>
 
 ### Run in background / Background services (legacy apps)
