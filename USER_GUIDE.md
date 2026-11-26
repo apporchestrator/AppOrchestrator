@@ -20,9 +20,10 @@ How to download, start AppOrchestrator and connect a phone is on the
 8. [Batch actions](#8-batch-actions)
 9. [Profiles](#9-profiles)
 10. [Installing APK files](#10-installing-apk-files)
-11. [Troubleshooting](#11-troubleshooting)
-12. [Limits](#12-limits)
-13. [Privacy](#13-privacy)
+11. [The terminal](#11-the-terminal)
+12. [Troubleshooting](#12-troubleshooting)
+13. [Limits](#13-limits)
+14. [Privacy](#14-privacy)
 
 ## 1. How it works
 
@@ -36,7 +37,8 @@ folder (`/data/local/tmp`) and runs it there. Nothing is installed on the phone,
 running after AppOrchestrator is closed.
 
 Before every change AppOrchestrator reads the app again and writes the change into the phone's
-journal, so that it can be undone. Each phone has its own journal on the computer.
+journal, so that it can be undone. Each phone has its own journal on the computer. Commands you type
+in the [terminal](#11-the-terminal) are yours: they are not journaled.
 
 ## 2. The window
 
@@ -47,8 +49,8 @@ journal, so that it can be undone. Each phone has its own journal on the compute
   **Connect over Wi-Fi…** adds a phone without a cable ([download page](README.md#over-wi-fi)).
 * **The selected phone**: its model, Android version and how it is connected. **Install APK…** and
   **Refresh** are at the top right.
-* **Tabs**: **Packages**, **Journal** and **Profiles** of that phone. The number is how many entries
-  or profiles there are.
+* **Tabs**: **Packages**, **Journal**, **Profiles** and **Terminal** of that phone. The number is how
+  many entries or profiles there are.
 * **Output**, at the bottom: what AppOrchestrator does, in words: which app it changes, what it
   copies, what went wrong. Drag its top edge to make it taller; **Hide** folds it away.
 * **The status bar**: whether the adb server runs, and on which port. On the right, the app's
@@ -85,12 +87,20 @@ The top shows the type, uid, version, install path, installer and state. Below a
   **Uninstall updates**, a removed one has **Restore for user**.
 * **Add to profile…**: save one of this app's states into a [profile](#9-profiles).
 * **Save APK…**: save the app to a file on the computer, to [install it again](#save-apk) later.
-* **Permissions**: a switch per runtime permission, with Android's own name and description in the phone's language. Permissions fixed by the system are greyed out.
+* **Recent use**: what the app used lately (location, camera, microphone, clipboard, contacts…), on
+  screen or in the background. See [Recent use](#recent-use).
+* **Permissions**: first *Pause app activity if unused* and *Read the clipboard* (see
+  [Pause app activity if unused](#pause-app-activity-if-unused) and
+  [Read the clipboard](#read-the-clipboard)), then a switch per runtime permission, with Android's
+  own name and description in the phone's language. Permissions fixed by the system are greyed out.
+  Last, [Granted at install](#granted-at-install): what Android granted by itself, read only.
 * **Special access**: what Android lists under *Special app access* (display over other apps, usage
   access, all files access, alarms and reminders…), only what the app asks for, each with its switch.
   See [Special access](#special-access).
+* **MIUI permissions** (Xiaomi, third-party apps): Xiaomi's own permissions, read only. See
+  [MIUI autostart and MIUI permissions](#miui-autostart-and-miui-permissions-xiaomi).
 * **Background**: *Run in background*, *Background services (legacy apps)*, *Battery optimization*,
-  *Background mobile data*, and on Xiaomi phones *MIUI battery saver*.
+  *Background mobile data*, and on Xiaomi phones *MIUI battery saver* and *MIUI autostart*.
 * **Network**: *Internet access*.
 * **Notifications**: *Show notifications*.
 * **Links**: *Open supported links*, only for apps that open web addresses.
@@ -98,8 +108,8 @@ The top shows the type, uid, version, install path, installer and state. Below a
 
 Some apps share one uid (*shared uid*; mostly system apps, such as Google Play services and Google
 Services Framework), and Android keeps some settings for the whole uid. On such an app *Background
-mobile data*, *Internet access* and *Battery optimization* say *whole shared uid …* right after the
-state, and *Permissions* says so above its list: a change there applies to every app of that uid.
+mobile data*, *Internet access*, *Battery optimization* *Pause app activity if unused* and *Read the clipboard* say
+*whole shared uid …* right after the state, and *Permissions* says so above its list: a change there applies to every app of that uid.
 A *Special access* row says *set for its whole uid* when the uid's setting overrules the app's own.
 Such an app's card has a **Shared uid** section under the buttons: the uid's name and number, and
 **Show all … apps**, which lists the other apps of that uid; click one to open its card. An app alone
@@ -269,6 +279,35 @@ the version the phone shipped with. The update comes back only from the store. *
 `pm uninstall <package>` on an updated system package.
 </details>
 
+### Recent use
+
+What the app used lately, as Android recorded it: the location, the camera, the microphone, the
+clipboard, contacts, the call log, text messages, the calendar, photos and videos. Only what it used
+has a row, the newest first. The section changes nothing: to stop a use, revoke the permission
+below it.
+
+Each row says when and where the app was: *2 h ago · in background*, *5 min ago · on screen*, or
+*from a foreground service*. Under it, where Android keeps the last 7 days, how many times
+(*15 times in 7 days, 9 in background*), and *Refused …* when the app tried again after its last use
+and Android said no. A row with no use, only refusals, says *Tried … · refused*.
+
+Below that, in small print, is Android's name for it. **History…** opens every use of the 7 days, by
+day. Android keeps every use of the location, the camera and the microphone for 7 days; of the rest
+only the last use and the last refusal. Some phones keep the 7 days of every permission: then those
+rows get them too.
+
+Android records a use when the app goes through the system for it. An app that has the camera app
+take a photo for it, or opens a file you picked for it, leaves no record of its own; one that only
+opened the camera without taking a picture may leave none either.
+
+<details><summary>How it works</summary>
+
+`dumpsys appops --include-discrete 0 --package <package>`, read with the card: the `Access:` and
+`Reject:` lines of each operation (`FINE_LOCATION`, `CAMERA`, `RECORD_AUDIO`, `READ_CLIPBOARD`,
+`READ_CONTACTS`…), and the 7 days under `Discrete accesses:`. The phone's own time (`date`) comes with
+it, so *ago* and the days follow the phone's clock.
+</details>
+
 ### Permissions
 
 Each switch grants or revokes one runtime permission (camera, location, contacts…). Its name and
@@ -284,6 +323,87 @@ change applies to all of them, and the card says so.
 `pm grant --user 0 <package> <permission>` / `pm revoke --user 0 <package> <permission>`. The texts
 come from `pm list permissions -g -d -f`, read once, with the first package list: after a change of
 the phone's language, restart AppOrchestrator to see them in the new one.
+</details>
+
+#### Pause app activity if unused
+
+The first row of **Permissions** is the switch Android has in the app's *App info*: when it is on
+and you don't use the app for a few months, Android removes its permissions, deletes its temporary
+files and stops its notifications until you open the app again. Turn it off for an app you rarely
+open but need to keep working, such as a bank app or an alarm. On Android 11 and 12 the switch is
+called *Remove permissions if app isn't used* and *Remove permissions and free up space*, and does
+less (Android 11 only removes the permissions).
+
+* It is on by default, except for apps built for Android 10 and older.
+* *Paused now*: Android has paused the app. Turning the switch off wakes it, as Android's own
+  switch does; opening the app on the phone wakes it too.
+* *Never paused*: Android never pauses this app, whatever the switch says, and greys its own switch
+  out; the row has no switch then and says why: the app has no icon, it is the phone's keyboard,
+  assistant or another service that is on, it installs apps, it is a system app, and so on.
+* Android keeps it per uid: for apps that share one, the change applies to all of them.
+
+<details><summary>How it works</summary>
+
+`appops set --user 0 --uid <package> AUTO_REVOKE_PERMISSIONS_IF_UNUSED allow|ignore`, at the uid's
+level as Android's settings write it; turning it off also runs `cmd app_hibernation set-state` for
+the user and for the phone, false. Whether Android paused the app comes from
+`cmd app_hibernation get-state`. Why an app is never paused follows Android's own rules
+(PermissionController's `HibernationPolicy`): an icon in the app list (`cmd package
+query-activities`), the services in use (`settings list secure`), the wallpaper, device admins and
+owners, roles (`dumpsys role`), some permissions. What is the same for every app is read once a
+minute at most. The undo puts the uid's mode back.
+</details>
+
+#### Read the clipboard
+
+The second row of **Permissions**, under *Pause app activity if unused*, says whether the app may read what was copied on the phone. It is
+not a permission, and neither Android's settings nor Xiaomi's have a switch for it; every app may by
+default. Since Android 10 only the app on screen and the keyboard can read the clipboard at all.
+
+Off, the app gets nothing from the clipboard, **not even when you paste into it yourself**: its
+**Paste** does nothing. It can still copy. Turned off for the phone's keyboard, the keyboard's own
+clipboard stops working too. [Recent use](#recent-use) then shows the app's tries as refused.
+
+<details><summary>How it works</summary>
+
+The app-op `READ_CLIPBOARD`, which Android checks whenever an app reads the clipboard: off is
+`appops set --user 0 --uid <package> READ_CLIPBOARD ignore`. It is set for the uid because a mode of
+the uid, when there is one, is all Android looks at, and Xiaomi phones give every app one
+(`foreground`). On sets `allow`, which removes the uid's mode, and also for the app where its own mode
+refuses. The undo puts both back as they were.
+</details>
+
+#### Granted at install
+
+The last row of **Permissions** counts the permissions Android granted the app by itself when it
+installed it, without asking: full network access, run at startup, prevent the phone from sleeping,
+control vibration and the like. They have no switches: only removing the app takes them back.
+**Show** lists them all, read only:
+
+* by who defines them: **Android**, **Google** (Play services, Play Store), **Other apps**, and
+  **Its own** (the app's own, for its parts and its other apps);
+* each with Android's own name and description, in the phone's language, and its system name. A
+  permission Android has no text for shows its system name alone;
+* *Android no longer uses it*: a permission Android still grants but nothing checks any more, such as
+  `MANAGE_ACCOUNTS`;
+* **Asked for, not granted**: permissions Android keeps for system apps or for apps signed like the
+  app that defines them. *Can be granted by hand over adb* marks a development permission;
+* last, how many more the app asks for that don't exist on this phone at all: other makers' badges,
+  permissions of newer Android versions, of apps that are not installed. Other app managers list each
+  of them; the card only counts them.
+
+Runtime permissions and special access are not repeated there: they have their own switches. For
+apps that share a uid (some system apps), Android grants the permissions to the whole uid, so the
+list holds what all of them asked for, and says so. The
+first opening for a phone reads Android's texts of every permission, which takes a second or two.
+
+<details><summary>How it works</summary>
+
+The rows come from the `install permissions:` of `dumpsys package <package>`, the permissions asked
+for from its `requested permissions:`. Android's texts, who defines each permission and how it is
+protected come from `pm list permissions -g -f`, read when the list first opens and kept until
+AppOrchestrator restarts; *Android no longer uses it* from the `flags=` of `dumpsys package
+permission <names>`.
 </details>
 
 ### Special access
@@ -443,6 +563,38 @@ cannot write it: PowerKeeper's provider needs a system permission. The page is
 `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` action on HyperOS, which opens Security's *Battery details*.
 HyperOS freezes background apps when `persist.sys.powmillet.enable` is `true`; apps set to
 `noRestrict` are skipped.
+</details>
+
+### MIUI autostart and MIUI permissions (Xiaomi)
+
+Xiaomi phones (MIUI, HyperOS) have permissions of their own for third-party apps, which only MIUI's
+Security app shows and changes. The card shows four of them, read only:
+
+| Row | Where | The app may… |
+|---|---|---|
+| MIUI autostart | **Background**, under *MIUI battery saver* | start by itself when it is not running: after a restart, or woken by the system or other apps |
+| Home screen shortcuts | **MIUI permissions** | add shortcuts to the home screen |
+| Show on Lock screen | **MIUI permissions** | show its screens over the lock screen |
+| Open new windows while running in the background | **MIUI permissions** | open its screens while it runs in the background, over the app you are using |
+
+**Change on the phone…** turns the phone's screen on and opens Security there: for *MIUI autostart*
+its autostart list (find the app there), for the others the app's permissions, where they are under
+**Other permissions**. Unlock the phone and choose; the card notices the change by itself within a
+few seconds (it watches for three minutes). Protected apps have no button. System apps have no such
+rows: Security does not show them either.
+
+An app without autostart may miss messages and reminders while it is not running: allow it for
+messengers, alarms and trackers, together with *MIUI battery saver*: **No restrictions**.
+
+<details><summary>How it works</summary>
+
+Xiaomi's own app-ops, which `dumpsys appops --package <package>` prints as `MIUIOP(10008)`
+(autostart), `MIUIOP(10017)` (home screen shortcuts), `MIUIOP(10020)` (lock screen) and
+`MIUIOP(10021)` (windows from the background). No record or `allow` is allowed; `ignore` and MIUI's
+`ask` show as *Deny* on Security's page. The shell could write them, but Security keeps its own
+copy and writes it back at the next restart, so AppOrchestrator only reads them. The pages are
+`miui.intent.action.OP_AUTO_START` (the autostart list) and `miui.intent.action.APP_PERM_EDITOR`
+with the package (the app's permissions in Security); the section is shown where that page exists.
 </details>
 
 ### Which one to use
@@ -717,7 +869,27 @@ AppOrchestrator checks that every file is an APK of that app, then writes the `.
 extension is put in its place.
 </details>
 
-## 11. Troubleshooting
+## 11. The terminal
+
+The **Terminal** tab is a shell on the selected phone, the one `adb shell` gives, in the window: type
+commands as you would after `adb shell` (`pm`, `cmd`, `dumpsys`, `settings`, `top`, `logcat`…). You
+need no `adb` of your own for it, and nothing to type before the command.
+
+* **The commands are yours.** They run as the shell user, with every right `adb shell` has.
+  AppOrchestrator does not journal them, cannot undo them, and its protection of the system UI, the
+  launcher and the keyboard does not apply: a grey line at the start of every session says so.
+* **A full terminal.** The shell knows the tab's size and follows it when the window changes, so
+  `top`, `vi` and `less` work; **Ctrl+C** stops the command in front. Select with the mouse, then
+  **Copy** and **Paste** in the right-click menu, or **Cmd+C** and **Cmd+V** on macOS, **Ctrl+Shift+C**
+  and **Ctrl+Shift+V** on Windows. While the terminal has the focus, every key goes to the shell,
+  **F5**, **Ctrl+R** and **Escape** too.
+* **It keeps running** while you look at the other tabs or phones: each phone has its own shell.
+  **End session** ends it and everything it started; so does `exit`. Then press Enter, or
+  **New session**, for a new one. A phone that disconnects ends its shell too.
+* **Alongside the app.** The terminal has a connection of its own: a long command in it does not hold
+  up the list, the card or a batch.
+
+## 12. Troubleshooting
 
 | What you see | What to do |
 |---|---|
@@ -732,7 +904,7 @@ extension is put in its place.
 | An action says *Refused: Protected* | The package is protected ([section 6](#6-protection-and-confirmations)). |
 | An action says *Failed* | The journal entry has the phone's answer. The phone refuses some changes for some packages by itself. |
 
-## 12. Limits
+## 13. Limits
 
 AppOrchestrator has the rights of `adb shell`, not root. It cannot:
 
@@ -744,11 +916,11 @@ AppOrchestrator has the rights of `adb shell`, not root. It cannot:
 * install an encrypted `.apkm` from an older APKMirror;
 * save an app's data: **Save APK** saves the app only.
 
-## 13. Privacy
+## 14. Privacy
 
 AppOrchestrator collects and sends nothing. What it reads from the phone stays on your computer, in
 its folder ([where](README.md#where-apporchestrator-keeps-its-files)): each phone's journal, the
 profiles, the settings and the APK copies saved before **Uninstall for all users**. APK files you
-save with **Save APK** go to the folder you choose. The only network
+save with **Save APK** go to the folder you choose. What you type in the terminal and what it prints are not saved anywhere. The only network
 traffic is adb's own: to the phone over Wi-Fi, and the one-time download of Platform-Tools from
 Google if you choose it.
