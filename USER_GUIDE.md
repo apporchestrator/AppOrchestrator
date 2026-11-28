@@ -21,9 +21,10 @@ How to download, start AppOrchestrator and connect a phone is on the
 9. [Profiles](#9-profiles)
 10. [Installing APK files](#10-installing-apk-files)
 11. [The terminal](#11-the-terminal)
-12. [Troubleshooting](#12-troubleshooting)
-13. [Limits](#13-limits)
-14. [Privacy](#14-privacy)
+12. [Activities](#12-activities)
+13. [Troubleshooting](#13-troubleshooting)
+14. [Limits](#14-limits)
+15. [Privacy](#15-privacy)
 
 ## 1. How it works
 
@@ -49,7 +50,7 @@ in the [terminal](#11-the-terminal) are yours: they are not journaled.
   **Connect over Wi-Fi…** adds a phone without a cable ([download page](README.md#over-wi-fi)).
 * **The selected phone**: its model, Android version and how it is connected. **Install APK…** and
   **Refresh** are at the top right.
-* **Tabs**: **Packages**, **Journal**, **Profiles** and **Terminal** of that phone. The number is how
+* **Tabs**: **Packages**, **Journal**, **Profiles**, **Terminal** and **Activities** of that phone. The number is how
   many entries or profiles there are.
 * **Output**, at the bottom: what AppOrchestrator does, in words: which app it changes, what it
   copies, what went wrong. Drag its top edge to make it taller; **Hide** folds it away.
@@ -81,12 +82,33 @@ something changed on the phone itself.
 
 <img src="images/card.png" width="800" alt="A package card">
 
-The top shows the type, uid, version, install path, installer and state. Below are:
+The top shows the type, uid, version, install path, installer and state, then what the app takes
+on the phone:
+
+* **Size**: everything together, as Android's App info counts it, and what it is made of: **app**
+  (its APK files in the phone's storage, the code Android compiled from them and its libraries; a
+  system app that was never updated counts almost nothing here), **data** (what the app saved,
+  without the cache) and **cache**. Decimal units, as in Android's settings (1 MB is 1 000 000
+  bytes).
+* In brackets after *app*, the **APK files**: the files the app is installed from, the base APK and
+  its splits, and how many (about what **Save APK…** saves). Usually they are part of *app*, and the
+  total does not count them twice; a system app keeps them in the system partition, so there they
+  can be far larger than *app*.
+
+The sizes come a moment after the card, through the helper, and are read again with the card. Below
+are:
 
 * **Buttons** for one-off actions. Which ones appear depends on the app: an updated system app has
   **Uninstall updates**, a removed one has **Restore for user**.
+* **Open app**: wake the phone's screen and open the app there, as a tap on its home screen icon
+  does (an app already running comes back as it was left). It is there for apps with an icon on the
+  home screen that are installed and not disabled or archived. Nothing changes, so nothing goes into
+  the journal; the bottom of the card says it opened, or why not. If the phone has a lock screen,
+  unlock it to see the app.
 * **Add to profile…**: save one of this app's states into a [profile](#9-profiles).
 * **Save APK…**: save the app to a file on the computer, to [install it again](#save-apk) later.
+* **Components…**: the app's activities, services, receivers and providers in a window of their own,
+  read only. See [Components](#components).
 * **Recent use**: what the app used lately (location, camera, microphone, clipboard, contacts…), on
   screen or in the background. See [Recent use](#recent-use).
 * **Permissions**: first *Pause app activity if unused* and *Read the clipboard* (see
@@ -696,6 +718,50 @@ language. Works on HyperOS too, where Settings hide this option.
 follows the system again.
 </details>
 
+### Components
+
+<img src="images/components.png" width="800" alt="The components window: tabs, search, the list and one activity's details">
+
+**Components…** on the card opens the parts the app is made of, as its manifest declares them, in a
+window of their own: **activities** (its screens), **services** (work in the background), **receivers**
+(what Android or other apps tell it) and **providers** (data it offers). Read only: turning a single
+part off needs root (see [Limits](#14-limits)). The window can be resized; **Escape** closes it.
+
+* A tab per kind, with its count. Big apps have hundreds: Google Play services declares about 1,300.
+  The search finds a part by its name or, for a provider, its authority, on every tab at once: the
+  tabs then say *2 of 29*. **Disabled** and **Exported** narrow the list.
+* Each row is the class's own name and its package, with tags: **Disabled** (turned off on this phone,
+  usually by the app itself), **Disabled by default** (off in the manifest: the app turns it on when it
+  needs it), what it plugs into (*Keyboard*, *Starts after reboot*, *App icon*…), *Foreground:
+  location* (or camera, microphone, screen capture) for a service that may run in the foreground for
+  it, and **Exported** (other apps can open it, start it, send it broadcasts or ask it for data).
+* Before you pick a row, the right side says what these parts are and what the app **hooks into**,
+  from its enabled parts, each explained: most of them work only once you turn them on in Settings.
+* Click a row for its details on the right: the full name (it can be selected and copied), its state
+  in words, who else may call it and with which permission, its process when it is not the app's own,
+  a provider's authorities, the activity an alias opens, and its intent filters.
+* **Open on the phone**, under the name of an exported activity that is enabled: turns the phone's
+  screen on and opens that screen there, as a home screen shortcut would. Settings' *BatteryInfo*, for
+  instance, shows the battery's state, voltage and temperature. If that app already has the screen
+  open somewhere, the screens above it close. A screen that needs a permission the shell does not have
+  gets no button: the details say so. The line under the button says that it opened, or why
+  Android refused. Some screens expect to be opened by their app and close at once.
+
+An app that hides its own icon disables its launcher activity: Gboard, in the picture, does. A
+disabled app shows a note: none of its parts run until it is enabled again. **Components…** reads the
+list again each time; reading Google Play services takes about 3 seconds.
+
+<details><summary>How it works</summary>
+
+The list and the manifest's values come from the helper the app runs on the phone (PackageManager,
+one call per kind, disabled parts included), the values given as resources resolved and the split
+APKs included. What the phone changed comes from the `disabledComponents:` and `enabledComponents:` of
+user 0 in `dumpsys package <package>`, and the intent filters from its resolver tables. **Open on the
+phone** runs `am start --user 0 --activity-clear-top -n <package>/<class>`, with the shell's rights: it
+changes nothing and is not journaled. Disabling a part needs `pm disable <package>/<class>`, which
+Android refuses to the shell (*Shell cannot change component state*) except for test-only apps.
+</details>
+
 ## 6. Protection and confirmations
 
 Some packages are vital for the phone. Their cards show a red **Protected** note: only
@@ -816,9 +882,49 @@ below). AppOrchestrator reads them first and says what will happen:
   whether to install the app, tap **Install** there. Xiaomi phones ask only for 10 seconds and then
   deny it, and only if **Developer options → Install via USB** is on; turning it on may need you to
   sign in with a Mi account.
-* **An update.** It cannot be undone: Android does not install an older version over a newer one.
+* **An update.** It cannot be undone from the journal.
 * **The same version** again: the app keeps its data.
-* **An older version** than the phone has is not installed.
+* **An older version** than the phone has goes over it only when you choose **Install older
+  version**; see **Older versions** below.
+
+**Install for.** The app goes to the phone's main user, the one the rest of AppOrchestrator works
+with, and an update reaches only the users and profiles that already have the app. On a phone with
+other users or profiles (a work profile, a second user, Xiaomi's app clones) the dialog asks: **This
+user** or **All users**, which installs it for every one of them that lets the shell in; a work
+profile usually does not, and the dialog names it apart. An app that only
+another user had is installed for you, and **Undo** removes it for you again.
+
+**Older versions.** An app's older version can go over the newer one the phone has, keeping the
+app's data: to go back after an update that broke something, for example. Android 13 and older let
+it for any app; Android 14 and newer only over a debuggable build (a developer's own), and for any
+other app the dialog says why and offers no Install. A system app goes back only from an update, with
+a warning (**Uninstall updates** is the safe way back to the version it came with); one without
+updates does not go back at all. The app keeps the data the newer version wrote: if it then fails to
+start, clear its data on its card. Before installing, AppOrchestrator saves the newer version's APK
+files on the computer, as before an uninstall, so **Undo** in the journal installs it again. The store
+the app came from may update it again.
+
+<img src="images/install-older.png" width="800" alt="Installing an older version">
+
+**Every permission.** **Grant all permissions it asks for**, off at first, gives the app every
+permission it asks for and does not have yet: those it would ask you for (camera, contacts,
+location…) and developer permissions, which no screen of Android grants (change secure settings,
+read the logs of every app…); on Android 14 and newer also its full screen notifications. The dialog
+lists them in the phone's words, warns about developer permissions, and over an app you have says
+that it also gives what you said no to before. **Undo** in the journal takes back exactly what it
+granted, nothing else; a new app's undo uninstalls it. Not with an older version: one undo per install.
+
+<img src="images/install-grants.png" width="800" alt="Granting every permission">
+
+**Test builds.** An APK that Android Studio's **Run** made is marked test-only: AppOrchestrator
+installs it with the permission such builds need, and says so. An APK built with Gradle is not.
+
+**Apps for an old Android.** Android 14 and newer refuse apps built for a very old Android version
+(older than Android 6 on Android 14, older than Android 7 on 15 and newer), since they skip newer
+privacy and security rules. The dialog says so, and installs it only after you tick **Install
+anyway**. Google Play Protect may still ask about such an app on the phone.
+
+<img src="images/install-old-app.png" width="800" alt="An app built for an old Android">
 
 **Installer** says which store Android records as where the app came from. That store updates it,
 and the app's settings name it. An update keeps the app's own store at first; a new app has none,
@@ -841,8 +947,15 @@ read: download it again.
 
 <details><summary>How it works</summary>
 
-The files go to `/data/local/tmp`, then `pm install -r [-i <installer>] <files>`; the files are
-removed again in any case. From an archive, only the chosen APK files are unpacked on the computer,
+The files go to `/data/local/tmp`, then `pm install -r [-d] [-g] [-t] [--bypass-low-target-sdk-block] --user 0
+[-i <installer>] <files>`, without `--user 0` for all users; the files are removed again in any case.
+`-d` is an older version: Android 14 took that right away from the shell except over a debuggable app
+(AOSP commit 435c8fe). Its undo installs the saved newer files without `-d`. `-g` grants every
+permission; its undo is `pm revoke --user 0` of what the app holds now and did not before (read with
+`dumpsys package` before and after), and `appops set` for the full screen notifications.
+`-t` is added for an APK whose manifest says `android:testOnly="true"`, and
+`--bypass-low-target-sdk-block` only after **Install anyway**, and only on Android 14 and newer (an
+older `pm` refuses the whole command for it). The phone's users come from `cmd user list -v`. From an archive, only the chosen APK files are unpacked on the computer,
 into a temporary folder that goes when the dialog closes. The phone's processor types and density
 come from `getprop ro.product.cpu.abilist` and `wm density`.
 </details>
@@ -889,7 +1002,39 @@ need no `adb` of your own for it, and nothing to type before the command.
 * **Alongside the app.** The terminal has a connection of its own: a long command in it does not hold
   up the list, the card or a batch.
 
-## 12. Troubleshooting
+## 12. Activities
+
+<img src="images/activities.png" width="800" alt="The Activities tab: a search for battery finds Settings' battery screens">
+
+The **Activities** tab lists the screens of every app on the selected phone that other apps may open,
+as Activity Launcher does on a phone: settings pages, test menus, parts of apps without an icon of
+their own. You need not know which app a screen is in: type *battery info* and it finds Settings'
+*Battery info*.
+
+* **By app.** Each app with its icon, its package and how many screens it has; click it to unfold
+  them. A search looks in the screens' labels and class names (case, spaces and dashes do not matter)
+  and in the apps' names and packages, and shows the apps it finds unfolded.
+* **Open on the phone** turns the phone's screen on and opens that screen there, as a home screen
+  shortcut would. A message at the bottom says that it opened, or why Android refused.
+* Instead of the button, *Needs a permission: …* marks a screen that needs a permission the shell does
+  not have: Android would refuse it. The same goes for **Open on the phone** in an app's
+  [Components](#components).
+* Some screens expect to be opened by their own app, with data it passes along: they close at once or
+  make their app stop. That is the app's doing, not AppOrchestrator's.
+* The list is read with the helper the first time the tab opens (from a few seconds up to half a
+  minute, the first time after the phone connects) and kept for that phone: **Refresh** reads it again
+  after you install or remove apps.
+
+<details><summary>How it works</summary>
+
+The helper lists every installed app's activities with PackageManager in one call; without the flags
+for disabled parts it leaves out disabled ones, as a launcher does, and only exported ones are kept.
+Labels come from each app's resources, in the phone's language. The shell's permissions come from
+`dumpsys package com.android.shell` (read once). **Open on the phone** runs `am start --user 0
+--activity-clear-top -n <package>/<class>`, with the shell's rights; nothing is changed or journaled.
+</details>
+
+## 13. Troubleshooting
 
 | What you see | What to do |
 |---|---|
@@ -904,7 +1049,7 @@ need no `adb` of your own for it, and nothing to type before the command.
 | An action says *Refused: Protected* | The package is protected ([section 6](#6-protection-and-confirmations)). |
 | An action says *Failed* | The journal entry has the phone's answer. The phone refuses some changes for some packages by itself. |
 
-## 13. Limits
+## 14. Limits
 
 AppOrchestrator has the rights of `adb shell`, not root. It cannot:
 
@@ -916,7 +1061,7 @@ AppOrchestrator has the rights of `adb shell`, not root. It cannot:
 * install an encrypted `.apkm` from an older APKMirror;
 * save an app's data: **Save APK** saves the app only.
 
-## 14. Privacy
+## 15. Privacy
 
 AppOrchestrator collects and sends nothing. What it reads from the phone stays on your computer, in
 its folder ([where](README.md#where-apporchestrator-keeps-its-files)): each phone's journal, the
